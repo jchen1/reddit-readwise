@@ -1,4 +1,5 @@
 import Snoowrap from "snoowrap";
+import * as Readwise from "./readwise";
 
 import secrets from "./secrets";
 
@@ -11,7 +12,20 @@ async function handleCron(event: ScheduledEvent): Promise<void> {
     password: secrets.REDDIT_PASSWORD,
   });
 
-  console.log(await snoowrap.getInbox());
+  /*
+    for each message in inbox:
+      see if the user has a token (or this message is the token)
+        save the token if it's new
+      for each comment link in message thread:
+        push to readwise
+  */
+  // console.log(await snoowrap.getInbox());
+  const client = Readwise.client("");
+  console.log(
+    await Readwise.addHighlights(client, [
+      { text: "test", source_url: "https://jeffchen.dev" },
+    ]),
+  );
 }
 
 if (secrets.LOCAL === false) {

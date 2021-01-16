@@ -7,6 +7,7 @@ type Secrets = {
 const inLocal = process && process.env && process.env.NODE_ENV !== "production";
 
 if (inLocal) {
+  // @ts-ignore: we don't have node typings installed
   const dotenv = require("dotenv");
   dotenv.config();
   process.env.LOCAL = true;
