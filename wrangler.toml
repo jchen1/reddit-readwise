@@ -1,0 +1,7 @@
+name = "reddit-readwise"
+type = "webpack"
+account_id = "cb42d507ff34ab51011b9dc6e8036aa0"
+workers_dev = true
+route = ""
+zone_id = ""
+webpack_config = "webpack.config.js"
