@@ -5,3 +5,10 @@ workers_dev = true
 route = ""
 zone_id = ""
 webpack_config = "webpack.config.js"
+
+kv_namespaces = [
+	 { binding = "TOKENS", id = "b431dbb4827b4cf981e1dce921e0bfa5" }
+]
+
+[triggers]
+crons=["* * * * *"]

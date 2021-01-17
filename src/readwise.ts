@@ -10,12 +10,12 @@ export type Highlight = {
   author?: string;
   image_url?: string;
   source_url?: string;
-  sourceType?: "book" | "article" | "podcast";
+  source_type?: "book" | "article" | "podcast";
   note?: string;
   location?: number;
-  locationType?: string;
-  highlightedAt?: Date;
-  highlightURL?: string;
+  location_type?: string;
+  highlighted_at?: Date;
+  highlight_url?: string;
 };
 
 // @ts-ignore don't ask
@@ -46,20 +46,30 @@ function api(
   headers["Content-Type"] = "application/json";
   requestOpts.headers = headers;
 
-  console.log(requestOpts);
-
   return fetch(`${baseURL}${url}`, requestOpts);
 }
 
 export async function addHighlights(client: Client, highlights: Highlight[]) {
+  console.log(
+    `Adding ${highlights.length} highlights for token ${client.token}...`,
+  );
   return api(client, "highlights", {
     method: "POST",
     body: JSON.stringify({
       highlights,
     }),
+  }).then((res) => {
+    console.log(
+      `Added ${highlights.length} highlights for token ${client.token}!`,
+    );
+    return res;
   });
 }
 
 export function client(token: string): Client {
   return { token };
+}
+
+export async function verifyToken(client: Client) {
+  return api(client, "auth").then((res) => res.status === 204);
 }
