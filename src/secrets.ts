@@ -4,7 +4,11 @@ type Secrets = {
   LOCAL: boolean;
 };
 
-const inLocal = process && process.env && process.env.NODE_ENV !== "production";
+const inLocal =
+  typeof self === "undefined" &&
+  process &&
+  process.env &&
+  process.env.NODE_ENV !== "production";
 
 if (inLocal) {
   // @ts-ignore: we don't have node typings installed
