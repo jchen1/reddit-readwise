@@ -12,8 +12,8 @@ export async function getToken(id: string) {
 
 export async function setToken(id: string, val: string) {
   if (secrets.LOCAL) {
-    localTokenCache[id] = val;
+    return (localTokenCache[id] = val);
   } else {
-    return TOKENS.set(id);
+    return TOKENS.put(id, val);
   }
 }
