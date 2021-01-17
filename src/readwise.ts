@@ -19,7 +19,7 @@ export type Highlight = {
 };
 
 // @ts-ignore don't ask
-const fetch = secrets.LOCAL ? require("node-fetch").default : fetch;
+const fetch = secrets.LOCAL ? require("node-fetch").default : self.fetch;
 
 const baseURL = "https://readwise.io/api/v2/";
 

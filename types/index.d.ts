@@ -12,3 +12,5 @@ declare function addEventListener(
 declare var process: any;
 declare var REDDIT_CLIENT_SECRET: string;
 declare var REDDIT_PASSWORD: string;
+
+declare var TOKENS: any;

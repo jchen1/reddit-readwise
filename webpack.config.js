@@ -13,7 +13,7 @@ module.exports = {
     extensions: [".ts", ".tsx", ".js"],
     plugins: [],
   },
-  target: mode !== "production" ? "node" : false,
+  target: mode !== "production" ? "node" : "webworker",
   module: {
     rules: [
       {
@@ -24,5 +24,8 @@ module.exports = {
         },
       },
     ],
+  },
+  node: {
+    fs: "empty",
   },
 };
