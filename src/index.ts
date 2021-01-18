@@ -32,6 +32,12 @@ function btoa(val: string) {
   return Buffer.from(val).toString("base64");
 }
 
+if (typeof global !== "undefined") {
+  global.navigator = global.navigator || {};
+  global.navigator.userAgent = global.navigator.userAgent ||
+    "Reddit-Readwise/0.0.1 (https://jeffchen.dev)";
+}
+
 class BetterSnoowrap extends Snoowrap {
   rawRequest(options: SnoowrapRequestOptions): Promise<any> {
     // @ts-ignore don't ask
@@ -78,7 +84,7 @@ class BetterSnoowrap extends Snoowrap {
         "multipart/form-data";
       const fd = new FormData();
       Object.keys(options.formData).forEach((k) =>
-        fd.append(k, options.formData?.[k]),
+        fd.append(k, options.formData?.[k])
       );
       fetchOpts.body = fd;
     } else if (options.body) {
@@ -99,7 +105,7 @@ class BetterSnoowrap extends Snoowrap {
           // yolo...
           return Promise.resolve({
             body: res.body,
-            json: res.json,
+            json: res.json.bind(res),
             status: res.status,
             statusText: res.statusText,
             ...ret,
@@ -123,14 +129,11 @@ class BetterSnoowrap extends Snoowrap {
         }
 
         return res.text();
-      })
-      .then((t: any) => {
-        return t;
       });
   }
 }
 
-async function handleCron(event: ScheduledEvent): Promise<void> {
+async function handleCron(event: ScheduledEvent | FetchEvent): Promise<void> {
   const snoowrap = new BetterSnoowrap({
     userAgent: "Reddit-Readwise/0.0.1 (https://jeffchen.dev)",
     clientId: "9DT7XPaFovw-2Q",
@@ -172,6 +175,7 @@ async function handleCron(event: ScheduledEvent): Promise<void> {
     if (tokenOrURL(message.body) === "url") {
       const token = await getToken(message.author.name);
       if (token) {
+        console.log(1);
         const highlight = await parseCommentFromURL(snoowrap, message.body);
         highlightsByName[token] = highlightsByName[token] || [];
         highlightsByName[token].push(highlight);
@@ -181,11 +185,11 @@ async function handleCron(event: ScheduledEvent): Promise<void> {
     }
   }, unreads);
 
-  await mapListing(async (message) => {
-    if ((message as Snoowrap.PrivateMessage).markAsRead !== undefined) {
-      (message as Snoowrap.PrivateMessage).markAsRead();
-    }
-  }, unreads);
+  // await mapListing(async (message) => {
+  //   if ((message as Snoowrap.PrivateMessage).markAsRead !== undefined) {
+  //     (message as Snoowrap.PrivateMessage).markAsRead();
+  //   }
+  // }, unreads);
 
   await Promise.all(
     Object.keys(highlightsByName).map(async (token) => {
@@ -200,6 +204,16 @@ async function handleCron(event: ScheduledEvent): Promise<void> {
 if (secrets.LOCAL === false) {
   addEventListener("scheduled", (event) => {
     event.waitUntil(handleCron(event));
+  });
+
+  addEventListener("fetch", (event) => {
+    event.waitUntil(
+      handleCron(event).catch((e) => {
+        console.error(e);
+        throw e;
+      }),
+    );
+    event.respondWith(new Response("ok"));
   });
 } else {
   handleCron({

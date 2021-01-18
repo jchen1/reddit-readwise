@@ -47,17 +47,21 @@ export async function parseCommentFromURL(
     commentId,
   ] = url.pathname.split("/");
 
-  const comment = snoowrap.getComment(commentId);
-  const context = snoowrap.getSubmission(submissionId);
+  const comment = await snoowrap.getComment(commentId).fetch();
+  const context = await snoowrap.getSubmission(submissionId).fetch();
+
+  console.log("f u");
+
+  console.log(JSON.stringify(comment, null, 2));
 
   url.hash = "";
   url.search = "";
 
   return {
-    author: await comment.author.name,
-    text: await comment.body,
+    author: comment.author.name,
+    text: comment.body,
     source_url: url.toString(),
     source_type: "article",
-    title: await context.title,
+    title: context.title,
   };
 }

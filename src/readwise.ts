@@ -53,6 +53,9 @@ export async function addHighlights(client: Client, highlights: Highlight[]) {
   console.log(
     `Adding ${highlights.length} highlights for token ${client.token}...`,
   );
+  highlights.forEach((h) => {
+    console.log(JSON.stringify(h, null, 2));
+  });
   return api(client, "highlights", {
     method: "POST",
     body: JSON.stringify({
