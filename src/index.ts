@@ -69,24 +69,16 @@ async function handleCron(event: ScheduledEvent | FetchEvent): Promise<void> {
   console.log("Done!");
 }
 
-if (secrets.LOCAL === false) {
-  addEventListener("scheduled", (event) => {
-    event.waitUntil(handleCron(event));
-  });
+addEventListener("scheduled", (event) => {
+  event.waitUntil(handleCron(event));
+});
 
-  addEventListener("fetch", (event) => {
-    event.waitUntil(
-      handleCron(event).catch((e) => {
-        console.error(e);
-        throw e;
-      }),
-    );
-    event.respondWith(new Response("ok"));
-  });
-} else {
-  handleCron({
-    waitUntil: (_: any) => {},
-    scheduledTime: 0,
-    type: "scheduled",
-  });
-}
+addEventListener("fetch", (event) => {
+  event.waitUntil(
+    handleCron(event).catch((e) => {
+      console.error(e);
+      throw e;
+    }),
+  );
+  event.respondWith(new Response("ok"));
+});

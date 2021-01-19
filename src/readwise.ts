@@ -1,5 +1,3 @@
-import secrets from "./secrets";
-
 export type Client = {
   token: string;
 };
@@ -17,9 +15,6 @@ export type Highlight = {
   highlighted_at?: Date;
   highlight_url?: string;
 };
-
-// @ts-ignore don't ask
-const fetch = secrets.LOCAL ? require("node-fetch").default : self.fetch;
 
 const baseURL = "https://readwise.io/api/v2/";
 

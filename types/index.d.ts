@@ -15,7 +15,10 @@ declare var process: any;
 declare var REDDIT_CLIENT_SECRET: string;
 declare var REDDIT_PASSWORD: string;
 
-declare var TOKENS: any;
+declare var TOKENS: {
+  get(id: string): Promise<string | null>;
+  put(id: string, val: string): Promise<void>;
+};
 
 declare module "querystring" {
   export function encode(data: any): string;

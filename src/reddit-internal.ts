@@ -1,4 +1,3 @@
-/*! reddit. See LICENSE.md License. Feross Aboukhadijeh <https://feross.org/opensource> */
 import querystring from "querystring";
 
 const TOKEN_BASE_URL = "https://www.reddit.com/api/v1/access_token";
