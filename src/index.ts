@@ -3,15 +3,15 @@ import * as Readwise from "./readwise";
 import Reddit, { mapListing, parseCommentFromURL, tokenOrURL } from "./reddit";
 import secrets from "./secrets";
 
-async function handleCron(event: ScheduledEvent | FetchEvent): Promise<void> {
-  const reddit = new Reddit({
-    userAgent: "Reddit-Readwise/0.0.1 (https://jeffchen.dev)",
-    appId: "9DT7XPaFovw-2Q",
-    appSecret: secrets.REDDIT_CLIENT_SECRET,
-    username: "reddit-readwise",
-    password: secrets.REDDIT_PASSWORD,
-  });
+const reddit = new Reddit({
+  userAgent: "Reddit-Readwise/0.0.1 (https://jeffchen.dev)",
+  appId: "9DT7XPaFovw-2Q",
+  appSecret: secrets.REDDIT_CLIENT_SECRET,
+  username: "reddit-readwise",
+  password: secrets.REDDIT_PASSWORD,
+});
 
+async function handleCron(event: ScheduledEvent | FetchEvent): Promise<void> {
   /*
     for each message in inbox:
       see if the user has a token (or this message is the token)
@@ -69,16 +69,54 @@ async function handleCron(event: ScheduledEvent | FetchEvent): Promise<void> {
   console.log("Done!");
 }
 
+async function handlePost(request: Request): Promise<Response> {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader) {
+    return new Response("no header provided!", { status: 401 });
+  }
+  const [token, readwiseToken] = authHeader.split(" ");
+  if (token !== "Token" || !readwiseToken) {
+    return new Response("bad auth header!", { status: 401 });
+  }
+
+  const client = Readwise.client(readwiseToken);
+
+  if (!(await Readwise.verifyToken(client))) {
+    return new Response("bad token!", { status: 403 });
+  }
+
+  const body = await request.text();
+
+  if (tokenOrURL(body) !== "url") {
+    return new Response("body is not a url", { status: 400 });
+  }
+
+  const reddit = new Reddit({
+    userAgent: "Reddit-Readwise/0.0.1 (https://jeffchen.dev)",
+    appId: "9DT7XPaFovw-2Q",
+    appSecret: secrets.REDDIT_CLIENT_SECRET,
+    username: "reddit-readwise",
+    password: secrets.REDDIT_PASSWORD,
+  });
+
+  const highlight = await parseCommentFromURL(reddit, body);
+  await Readwise.addHighlights(client, [highlight]);
+
+  return new Response("ok");
+}
+
 addEventListener("scheduled", (event) => {
   event.waitUntil(handleCron(event));
 });
 
 addEventListener("fetch", (event) => {
-  event.waitUntil(
-    handleCron(event).catch((e) => {
-      console.error(e);
-      throw e;
-    }),
-  );
-  event.respondWith(new Response("ok"));
+  const request = event.request;
+  const method = request.method.toUpperCase();
+  if (method === "GET") {
+    return event.respondWith(new Response("ok"));
+  } else if (method === "POST") {
+    return event.respondWith(handlePost(request));
+  } else {
+    return event.respondWith(new Response("not implemented", { status: 405 }));
+  }
 });

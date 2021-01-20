@@ -54,9 +54,13 @@ export async function addHighlights(client: Client, highlights: Highlight[]) {
       highlights,
     }),
   }).then((res) => {
-    console.log(
-      `Added ${highlights.length} highlights for token ${client.token}!`,
-    );
+    if (res.status >= 200 && res.status < 300) {
+      console.log(
+        `Added ${highlights.length} highlights for token ${client.token}!`,
+      );
+    } else {
+      console.log(`Failed to add highlights for token ${client.token}...`);
+    }
     return res;
   });
 }
