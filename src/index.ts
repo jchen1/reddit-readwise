@@ -70,39 +70,50 @@ async function handleCron(event: ScheduledEvent | FetchEvent): Promise<void> {
 }
 
 async function handlePost(request: Request): Promise<Response> {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader) {
-    return new Response("no header provided!", { status: 401 });
+  try {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader) {
+      return new Response("no header provided!", { status: 401 });
+    }
+    const [token, readwiseToken] = authHeader.split(" ");
+    if (token !== "Token" || !readwiseToken) {
+      return new Response("bad auth header!", { status: 401 });
+    }
+
+    const client = Readwise.client(readwiseToken);
+
+    if (!(await Readwise.verifyToken(client))) {
+      return new Response("bad token!", { status: 403 });
+    }
+
+    let link;
+    if (
+      request.headers.get("content-type")?.toLowerCase() === "application/json"
+    ) {
+      link = (await request.json()).url;
+    } else {
+      link = await request.text();
+    }
+
+    if (link.length === 0 || tokenOrURL(link) !== "url") {
+      return new Response("body is not a url", { status: 400 });
+    }
+
+    const reddit = new Reddit({
+      userAgent: "Reddit-Readwise/0.0.1 (https://jeffchen.dev)",
+      appId: "9DT7XPaFovw-2Q",
+      appSecret: secrets.REDDIT_CLIENT_SECRET,
+      username: "reddit-readwise",
+      password: secrets.REDDIT_PASSWORD,
+    });
+
+    const highlight = await parseCommentFromURL(reddit, link);
+    await Readwise.addHighlights(client, [highlight]);
+
+    return new Response("ok");
+  } catch (e) {
+    return new Response("internal server error", { status: 500 });
   }
-  const [token, readwiseToken] = authHeader.split(" ");
-  if (token !== "Token" || !readwiseToken) {
-    return new Response("bad auth header!", { status: 401 });
-  }
-
-  const client = Readwise.client(readwiseToken);
-
-  if (!(await Readwise.verifyToken(client))) {
-    return new Response("bad token!", { status: 403 });
-  }
-
-  const body = await request.text();
-
-  if (tokenOrURL(body) !== "url") {
-    return new Response("body is not a url", { status: 400 });
-  }
-
-  const reddit = new Reddit({
-    userAgent: "Reddit-Readwise/0.0.1 (https://jeffchen.dev)",
-    appId: "9DT7XPaFovw-2Q",
-    appSecret: secrets.REDDIT_CLIENT_SECRET,
-    username: "reddit-readwise",
-    password: secrets.REDDIT_PASSWORD,
-  });
-
-  const highlight = await parseCommentFromURL(reddit, body);
-  await Readwise.addHighlights(client, [highlight]);
-
-  return new Response("ok");
 }
 
 addEventListener("scheduled", (event) => {
